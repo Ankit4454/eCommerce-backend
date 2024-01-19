@@ -1,7 +1,7 @@
 const Product = require('../models/product');
 
 module.exports.products = function (req, res) {
-    Product.find({}).then(function (products) {
+    Product.find({}).populate('user').populate({ path: 'ratings', options: { sort: { star: -1 } } }).then(function (products) {
         return res.status(200).json({
             products: products
         });
@@ -47,7 +47,7 @@ module.exports.update = function (req, res) {
 }
 
 module.exports.delete = function (req, res) {
-    Product.findByIdAndDelete(req.body.id).then(function (product) {
+    Product.findByIdAndDelete(req.params.id).then(function (product) {
         if (!product) {
             return res.status(404).json({
                 error: 'Product not found'

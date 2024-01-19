@@ -43,7 +43,7 @@ module.exports.signup = function (req, res) {
 }
 
 module.exports.signin = function (req, res) {
-    User.findOne({ email: req.body.email }).then(function (user) {
+    User.findOne({ email: req.body.email }).populate('addressList').then(function (user) {
         if (!user) {
             return res.status(401).json({
                 error: 'Invalid credentials'
