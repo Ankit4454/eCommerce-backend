@@ -14,16 +14,28 @@ module.exports.products = function (req, res) {
 }
 
 module.exports.create = function (req, res) {
-    Product.create({ user: req.body.user, name: req.body.name, description: req.body.description, price: req.body.price }).then(function (product) {
-        return res.status(201).json({
-            success: 'Product created successfully',
-            product: product
-        });
-    }).catch(function (err) {
-        console.log(`Error while creating a product ${err}`);
-        return res.status(500).json({
-            error: err.message || 'Internal Server Error'
-        });
+    Product.uploadedPicture(req, res, function (err) {
+        if (err) {
+            return res.status(400).json({
+                error: 'File upload failed. ' + err.message
+            });
+        }
+
+        if (req.file) {
+            let picturePath = path.join(Product.picturePath, req.file.filename);
+
+            Product.create({ picture: picturePath, user: req.body.user, name: req.body.name, description: req.body.description, price: req.body.price }).then(function (product) {
+                return res.status(201).json({
+                    success: 'Product created successfully',
+                    product: product
+                });
+            }).catch(function (err) {
+                console.log(`Error while creating a product ${err}`);
+                return res.status(500).json({
+                    error: err.message || 'Internal Server Error'
+                });
+            });
+        }
     });
 }
 
