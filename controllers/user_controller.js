@@ -8,13 +8,15 @@ module.exports.signup = function (req, res) {
 
     if (!emailValidator.test(req.body.email)) {
         return res.status(400).json({
-            error: 'Invalid email format'
+            error: true,
+            message: 'Invalid email format'
         });
     }
 
     if (!passwordValidator.test(req.body.password)) {
         return res.status(400).json({
-            error: 'Invalid password format. Password must have at least 8 characters, one uppercase letter, one lowercase letter, one digit, and one special character.'
+            error: true,
+            message: 'Invalid password format. Password must have at least 8 characters, one uppercase letter, one lowercase letter, one digit, and one special character.'
         });
     }
 
@@ -22,22 +24,26 @@ module.exports.signup = function (req, res) {
         if (!data) {
             User.create({ email: req.body.email, name: req.body.name, password: req.body.password, mobileNumber: req.body.mobileNumber }).then(function (user) {
                 return res.status(201).json({
-                    success: 'Registration successful'
+                    success: true,
+                    message: 'Registration successful'
                 });
             }).catch(function (err) {
                 return res.status(500).json({
-                    error: err.message || 'Internal Server Error'
+                    error: true,
+                    message: err.message || 'Internal Server Error'
                 });
             });
         } else {
             return res.status(409).json({
-                error: 'This email is already in use'
+                error: true,
+                message: 'This email is already in use'
             });
         }
     }).catch(function (err) {
         console.log(`Error while fetching a user ${err}`);
         return res.status(500).json({
-            error: err.message || 'Internal Server Error'
+            error: true,
+            message: err.message || 'Internal Server Error'
         });
     });
 }
@@ -46,26 +52,38 @@ module.exports.signin = function (req, res) {
     User.findOne({ email: req.body.email }).populate('addressList').then(function (user) {
         if (!user) {
             return res.status(401).json({
-                error: 'Invalid credentials'
+                error: true,
+                message: 'Invalid credentials'
             });
         }
         const isPasswordValid = compareSync(req.body.password, user.password);
 
         if (!isPasswordValid) {
             return res.status(401).json({
-                error: 'Invalid credentials'
+                error: true,
+                message: 'Invalid credentials'
             });
         }
 
         const token = jwt.sign({ user }, process.env.SECRET_JWT_LC, { expiresIn: '1h' });
         return res.status(200).json({
-            success: 'You have successfully logged in',
-            token: token
+            success: true,
+            data: {
+                token: token,
+                user: {
+                    name: user.name,
+                    email: user.email,
+                    mobileNumber: user.mobileNumber,
+                    addressList: user.addressList
+                }
+            },
+            message: 'You have successfully logged in'
         });
     }).catch(function (err) {
         console.log(`Error while fetching a user ${err}`);
         return res.status(500).json({
-            error: err.message || 'Internal Server Error'
+            error: true,
+            message: err.message || 'Internal Server Error'
         });
     });
 }
@@ -74,16 +92,19 @@ module.exports.update = function (req, res) {
     User.findByIdAndUpdate(req.body.id, { name: req.body.name, email: req.body.email }).then(function (user) {
         if (!user) {
             return res.status(404).json({
-                error: 'User not found'
+                error: true,
+                message: 'User not found'
             });
         }
         return res.status(200).json({
-            success: 'Profile updated successfully'
+            success: true,
+            message: 'Profile updated successfully'
         });
     }).catch(function (err) {
         console.log(`Error while updating a user ${err}`);
         return res.status(500).json({
-            error: err.message || 'Internal Server Error'
+            error: true,
+            message: err.message || 'Internal Server Error'
         });
     });
 }
