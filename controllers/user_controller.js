@@ -4,12 +4,20 @@ const jwt = require('jsonwebtoken');
 
 module.exports.signup = function (req, res) {
     const emailValidator = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const mobileRegex = /^[0-9]{10}$/;
     const passwordValidator = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
     if (!emailValidator.test(req.body.email)) {
         return res.status(400).json({
             error: true,
             message: 'Invalid email format'
+        });
+    }
+
+    if (!mobileRegex.test(req.body.mobileNumber)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Invalid phone number format'
         });
     }
 
@@ -49,7 +57,16 @@ module.exports.signup = function (req, res) {
 }
 
 module.exports.signin = function (req, res) {
-    User.findOne({ email: req.body.email }).populate('addressList').then(function (user) {
+    const emailOrMobileNumber = req.body.emailOrMobileNumber;
+
+    if (!isEmailOrMobile(emailOrMobileNumber)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Invalid email or mobile number format'
+        });
+    }
+
+    User.findOne({ $or: [{ email: emailOrMobileNumber }, { mobileNumber: emailOrMobileNumber }] }).populate('addressList').then(function (user) {
         if (!user) {
             return res.status(401).json({
                 error: true,
@@ -71,10 +88,13 @@ module.exports.signin = function (req, res) {
             data: {
                 token: token,
                 user: {
+                    _id: user._id,
                     name: user.name,
                     email: user.email,
                     mobileNumber: user.mobileNumber,
-                    addressList: user.addressList
+                    addressList: user.addressList,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt
                 }
             },
             message: 'You have successfully logged in'
@@ -89,15 +109,29 @@ module.exports.signin = function (req, res) {
 }
 
 module.exports.update = function (req, res) {
-    User.findByIdAndUpdate(req.body.id, { name: req.body.name, email: req.body.email }).then(function (user) {
-        if (!user) {
+    User.findByIdAndUpdate(req.body.id, { name: req.body.name, email: req.body.email, mobileNumber: req.body.mobileNumber }).then(function (data) {
+        if (!data) {
             return res.status(404).json({
                 error: true,
                 message: 'User not found'
             });
         }
+        const user = {
+            _id: data._id,
+            name: req.body.name,
+            email: req.body.email,
+            mobileNumber: req.body.mobileNumber,
+            addressList: data.addressList,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt
+        };
+        const token = jwt.sign({ user }, process.env.SECRET_JWT_LC, { expiresIn: '1h' });
         return res.status(200).json({
             success: true,
+            data: {
+                user: user,
+                token: token
+            },
             message: 'Profile updated successfully'
         });
     }).catch(function (err) {
@@ -108,3 +142,10 @@ module.exports.update = function (req, res) {
         });
     });
 }
+
+const isEmailOrMobile = (input) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const mobileRegex = /^[0-9]{10}$/;
+
+    return emailRegex.test(input) || mobileRegex.test(input);
+};
