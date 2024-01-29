@@ -21,7 +21,7 @@ const orderSchema = new mongoose.Schema({
     status: {
         type: String,
         required: true,
-        enum: ['Order Confirmed', 'Shipped', 'Out For Delivery', 'Delivered']
+        enum: ['Order Confirmed', 'Shipped', 'Out For Delivery', 'Delivered', 'Cancelled']
     }
 },{
     timestamps: true
