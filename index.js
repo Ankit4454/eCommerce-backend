@@ -6,6 +6,7 @@ const db = require('./config/mongoose');
 const passport = require('passport');
 const passportJWT = require('./config/passport-jwt-strategy');
 const path = require('path');
+const firebaseApp = require('./config/firebase');
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));

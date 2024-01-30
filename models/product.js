@@ -27,6 +27,11 @@ const productSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
+    category: {
+        type: String,
+        required: true,
+        enum: ['Electronics', 'Fashion', 'Home and Furniture', 'Beauty and Personal Care', 'Sports and Outdoors', 'Books and Stationery', 'Toys and Games', 'Health and Wellness', 'Automotive', 'Electrical Appliances', 'Jewelry and Watches', 'Food and Groceries', 'Pet Supplies', 'Art and Craft Supplies', 'Garden and Outdoor Living', 'Travel and Luggage', 'Fitness and Sports Equipment']
+    },
     ratings: [
         {
             type: mongoose.Schema.Types.ObjectId,
@@ -37,15 +42,17 @@ const productSchema = new mongoose.Schema({
     timestamps: true
 });
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '..', PICTURE_PATH));
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.fieldname + '-' + uniqueSuffix);
-    }
-});
+// const storage = multer.diskStorage({
+//     destination: function (req, file, cb) {
+//         cb(null, path.join(__dirname, '..', PICTURE_PATH));
+//     },
+//     filename: function (req, file, cb) {
+//         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+//         cb(null, file.fieldname + '-' + uniqueSuffix);
+//     }
+// });
+
+const storage = multer.memoryStorage();
 
 const fileFilter = function (req, file, cb) {
     const allowedFileTypes = /jpeg|jpg|png/;
