@@ -21,7 +21,7 @@ module.exports.products = function (req, res) {
             error: true,
             message: err.message || 'Internal Server Error'
         });
-    })
+    });
 }
 
 module.exports.create = function (req, res) {
@@ -137,7 +137,7 @@ module.exports.delete = function (req, res) {
 }
 
 module.exports.getProductDtls = function (req, res) {
-    Product.findById(req.params.id).then(function (product) {
+    Product.findById(req.params.id).populate({ path: 'ratings', options: { sort: { star: -1 } }, populate: { path: 'user', select: 'name' } }).then(function (product) {
         if (!product) {
             return res.status(404).json({
                 error: true,
@@ -157,7 +157,7 @@ module.exports.getProductDtls = function (req, res) {
             error: true,
             message: err.message || 'Internal Server Error'
         });
-    })
+    });
 }
 
 module.exports.getProductList = function (req, res) {
@@ -178,10 +178,48 @@ module.exports.getProductList = function (req, res) {
     })
 }
 
-const giveCurrentDateTime = () => {
-    const today = new Date();
-    const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
-    const time = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
-    const dateTime = date + ' ' + time;
-    return dateTime;
+module.exports.searchProducts = function (req, res) {
+    const searchQuery = req.params.string;
+
+    const query = {
+        $or: [
+            { name: { $regex: new RegExp(searchQuery, 'i') } },
+            { description: { $regex: new RegExp(searchQuery, 'i') } },
+            { category: { $regex: new RegExp(searchQuery, 'i') } },
+        ],
+    };
+
+    Product.find(query).populate({ path: 'ratings', options: { sort: { star: -1 } } }).then(function (products) {
+        return res.status(200).json({
+            success: true,
+            data: {
+                products: products,
+            },
+            message: 'Search products'
+        });
+    }).catch(function (err) {
+        console.log(`Error while fetching products ${err}`);
+        return res.status(500).json({
+            error: true,
+            message: err.message || 'Internal Server Error'
+        });
+    });
+}
+
+module.exports.filterCategoryProducts = function (req, res) {
+    Product.find({ category: req.params.string }).populate({ path: 'ratings', options: { sort: { star: -1 } } }).then(function (products) {
+        return res.status(200).json({
+            success: true,
+            data: {
+                products: products,
+            },
+            message: 'Category products'
+        });
+    }).catch(function (err) {
+        console.log(`Error while fetching products ${err}`);
+        return res.status(500).json({
+            error: true,
+            message: err.message || 'Internal Server Error'
+        });
+    });
 }

@@ -1,13 +1,25 @@
 const Rating = require('../models/rating');
+const Product = require('../models/product');
 
 module.exports.create = function (req, res) {
     Rating.create({ user: req.body.user, product: req.body.product, star: req.body.star, review: req.body.review }).then(function (rating) {
-        return res.status(201).json({
-            success: true,
-            data: {
-                rating: rating,
-            },
-            message: 'Rating created successfully'
+        Product.findById(rating.product).then(function (product) {
+            product.ratings.push(rating._id);
+            return product.save().then(function () {
+                return res.status(201).json({
+                    success: true,
+                    data: {
+                        rating: rating,
+                    },
+                    message: 'Rating created successfully'
+                });
+            });
+        }).catch(function (err) {
+            console.log(`Error while fetching a product ${err}`);
+            return res.status(500).json({
+                error: true,
+                message: err.message || 'Internal Server Error'
+            });
         });
     }).catch(function (err) {
         console.log(`Error while creating a rating ${err}`);
@@ -29,7 +41,7 @@ module.exports.update = function (req, res) {
         return res.status(200).json({
             success: true,
             data: {
-                rating: rating,
+                rating: { ...rating._doc, star: req.body.star, review: req.body.review },
             },
             message: 'Rating updated successfully'
         });
@@ -43,19 +55,33 @@ module.exports.update = function (req, res) {
 }
 
 module.exports.delete = function (req, res) {
-    Rating.findByIdAndDelete(req.body.id).then(function (rating) {
+    Rating.findByIdAndDelete(req.params.id).then(function (rating) {
         if (!rating) {
             return res.status(404).json({
                 error: true,
                 message: 'Rating not found'
             });
         }
-        return res.status(200).json({
-            success: true,
-            data: {
-                deletedRating: rating,
-            },
-            message: 'Rating deleted successfully'
+        Product.findByIdAndUpdate(rating.product, { $pull: { ratings: rating.id } }, { new: true }).then(function (product) {
+            if (!product) {
+                return res.status(404).json({
+                    error: false,
+                    message: 'Product not found',
+                });
+            }
+            return res.status(200).json({
+                success: true,
+                data: {
+                    deletedRating: rating,
+                },
+                message: 'Rating deleted successfully'
+            });
+        }).catch(function (err) {
+            console.log(`Error while pulling a rating from product ${err}`);
+            return res.status(500).json({
+                error: true,
+                message: err.message || 'Internal Server Error'
+            });
         });
     }).catch(function (err) {
         console.log(`Error while deleting a rating ${err}`);

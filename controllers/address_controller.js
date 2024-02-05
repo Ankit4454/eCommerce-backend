@@ -98,12 +98,26 @@ module.exports.delete = function (req, res) {
                 message: 'Address not found'
             });
         }
-        return res.status(200).json({
-            success: true,
-            data: {
-                deletedAddress: address,
-            },
-            message: 'Address deleted successfully',
+        User.findByIdAndUpdate(address.user, { $pull: { addressList: address.id } }, { new: true }).then(function (user) {
+            if (!user) {
+                return res.status(404).json({
+                    error: false,
+                    message: 'User not found',
+                });
+            }
+            return res.status(200).json({
+                success: true,
+                data: {
+                    deletedAddress: address,
+                },
+                message: 'Address deleted successfully',
+            });
+        }).catch(function (err) {
+            console.log(`Error while pulling a address from user ${err}`);
+            return res.status(500).json({
+                error: true,
+                message: err.message || 'Internal Server Error'
+            });
         });
     }).catch(function (err) {
         console.log(`Error while deleting a address ${err}`);

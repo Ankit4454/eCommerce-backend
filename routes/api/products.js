@@ -9,5 +9,7 @@ router.post('/update', passport.authenticate('jwt', {session: false}), productCo
 router.get('/delete/:id', passport.authenticate('jwt', {session: false}), productController.delete);
 router.get('/getProduct/:id', productController.getProductDtls);
 router.get('/getUserProduct/:userId', productController.getProductList);
+router.get('/search/:string', productController.searchProducts);
+router.get('/category/:string', productController.filterCategoryProducts);
 
 module.exports = router;
