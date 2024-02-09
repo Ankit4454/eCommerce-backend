@@ -20,4 +20,21 @@ passport.use(new JwtStrategy(opts, function (jwt_payload, done) {
     });
 }));
 
+passport.isAuthenticated = function (req, res, next) {
+    passport.authenticate('jwt', { session: false }, (err, user, info) => {
+        if (err) {
+            return next(err);
+        }
+
+        if (!user) {
+            return next();
+        }
+
+        return res.status(403).json({
+            error: true,
+            message: "You are already authenticated."
+        });
+    })(req, res, next);
+}
+
 module.exports = passport;

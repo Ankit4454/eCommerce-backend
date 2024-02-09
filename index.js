@@ -7,9 +7,14 @@ const passport = require('passport');
 const passportJWT = require('./config/passport-jwt-strategy');
 const path = require('path');
 const firebaseApp = require('./config/firebase');
+const expressLayouts = require('express-ejs-layouts');
+
 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+app.use(expressLayouts);
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, './views'));
 app.use(passport.initialize());
 app.use('/', require('./routes'));
 

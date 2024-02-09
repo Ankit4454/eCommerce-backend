@@ -1,10 +1,17 @@
 const User = require('../models/user');
 const { compareSync } = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const ResetPasswordMailer = require('../mailers/reset_password_mailer');
 const textValidator = /[<>\$"'`;^]/;
 const emailValidator = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const mobileRegex = /^[0-9]{10}$/;
 const passwordValidator = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+const isEmailOrMobile = (input) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const mobileRegex = /^[0-9]{10}$/;
+
+    return emailRegex.test(input) || mobileRegex.test(input);
+};
 
 module.exports.signup = function (req, res) {
     if (textValidator.test(req.body.name)) {
@@ -171,9 +178,71 @@ module.exports.update = function (req, res) {
     });
 }
 
-const isEmailOrMobile = (input) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const mobileRegex = /^[0-9]{10}$/;
+module.exports.sendResetPasswordLink = function (req, res) {
+    User.findOne({ email: req.body.email }).then(function (user) {
+        if (!user) {
+            return res.status(404).json({
+                error: true,
+                message: 'User not found'
+            });
+        }
+        const token = jwt.sign({ user }, process.env.SECRET_JWT_LC, { expiresIn: '600s' });
+        // const link = `${req.protocol}://${req.get('host')}/users/resetPassword/${token}`;
+        const link = `http://localhost:8000/users/reset-password/${token}`;
+        ResetPasswordMailer.newResetPassword({
+            user: user,
+            link: link
+        });
 
-    return emailRegex.test(input) || mobileRegex.test(input);
-};
+        return res.status(200).json({
+            success: true,
+            message: 'We have sent a reset password link to your email. Please check.'
+        });
+    }).catch(function (err) {
+        console.log(`Error while fetching a user ${err}`);
+        return res.status(500).json({
+            error: true,
+            message: err.message || 'Internal Server Error'
+        });
+    });
+}
+
+module.exports.resetPassword = function (req, res) {
+    const token = req.body.token;
+    const decoded = jwt.verify(token, process.env.SECRET_JWT_LC);
+    let dateNow = new Date();
+
+    if (decoded.exp < dateNow.getTime() / 1000) {
+        return res.status(400).json({
+            error: true,
+            message: 'Reset password link expired'
+        });
+    }
+
+    if (!passwordValidator.test(req.body.password)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Invalid password format. Password must have at least 8 characters, one uppercase letter, one lowercase letter, one digit, and one special character.'
+        });
+    }
+
+    if (req.body.password != req.body.confirmPassword) {
+        return res.status(400).json({
+            error: true,
+            message: 'Password and Confirm Password does not match'
+        });
+    }
+
+    User.findByIdAndUpdate(decoded.user._id, { password: req.body.password }).then(function (data) {
+        return res.status(200).json({
+            success: true,
+            message: 'Password updated successfully'
+        });
+    }).catch(function (err) {
+        console.log(`Error while updating a password ${err}`);
+        return res.status(500).json({
+            error: true,
+            message: err.message || 'Internal Server Error'
+        });
+    });
+}
