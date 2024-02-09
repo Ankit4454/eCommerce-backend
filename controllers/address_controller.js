@@ -1,5 +1,8 @@
 const Address = require('../models/address');
 const User = require('../models/user');
+const textValidator = /[<>\$"'`;^]/;
+const mobileRegex = /^[0-9]{10}$/;
+const pincodePattern = /^\d{6}$/;
 
 module.exports.getAddressList = function (req, res) {
     Address.find({ user: req.params.userId }).then(function (data) {
@@ -38,6 +41,27 @@ module.exports.getAddress = function (req, res) {
 }
 
 module.exports.create = function (req, res) {
+    if (textValidator.test(req.body.name) || textValidator.test(req.body.addressLine1) || textValidator.test(req.body.addressLine2) || textValidator.test(req.body.landmark) || textValidator.test(req.body.city) || textValidator.test(req.body.state)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Special characters are not allowed'
+        });
+    }
+
+    if (!mobileRegex.test(req.body.mobileNumber)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Invalid phone number format'
+        });
+    }
+
+    if (!pincodePattern.test(req.body.pincode)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Invalid pincode'
+        });
+    }
+
     Address.create({ user: req.body.user, name: req.body.name, mobileNumber: req.body.mobileNumber, pincode: req.body.pincode, addressLine1: req.body.addressLine1, addressLine2: req.body.addressLine2, landmark: req.body.landmark, city: req.body.city, state: req.body.state, addressType: req.body.addressType }).then(function (address) {
         User.findById(address.user).then(function (user) {
             user.addressList.push(address._id);
@@ -67,6 +91,27 @@ module.exports.create = function (req, res) {
 }
 
 module.exports.update = function (req, res) {
+    if (textValidator.test(req.body.name) || textValidator.test(req.body.addressLine1) || textValidator.test(req.body.addressLine2) || textValidator.test(req.body.landmark) || textValidator.test(req.body.city) || textValidator.test(req.body.state)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Special characters are not allowed'
+        });
+    }
+
+    if (!mobileRegex.test(req.body.mobileNumber)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Invalid phone number format'
+        });
+    }
+
+    if (!pincodePattern.test(req.body.pincode)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Invalid pincode'
+        });
+    }
+
     Address.findByIdAndUpdate(req.body.id, { name: req.body.name, mobileNumber: req.body.mobileNumber, pincode: req.body.pincode, addressLine1: req.body.addressLine1, addressLine2: req.body.addressLine2, landmark: req.body.landmark, city: req.body.city, state: req.body.state, addressType: req.body.addressType }).then(function (address) {
         if (!address) {
             return res.status(404).json({

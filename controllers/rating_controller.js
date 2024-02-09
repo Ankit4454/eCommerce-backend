@@ -1,7 +1,15 @@
 const Rating = require('../models/rating');
 const Product = require('../models/product');
+const textValidator = /[<>\$"'`;^]/;
 
 module.exports.create = function (req, res) {
+    if (textValidator.test(req.body.review)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Special characters are not allowed'
+        });
+    }
+
     Rating.create({ user: req.body.user, product: req.body.product, star: req.body.star, review: req.body.review }).then(function (rating) {
         Product.findById(rating.product).then(function (product) {
             product.ratings.push(rating._id);
@@ -31,6 +39,13 @@ module.exports.create = function (req, res) {
 }
 
 module.exports.update = function (req, res) {
+    if (textValidator.test(req.body.review)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Special characters are not allowed'
+        });
+    }
+    
     Rating.findByIdAndUpdate(req.body.id, { star: req.body.star, review: req.body.review }).then(function (rating) {
         if (!rating) {
             return res.status(404).json({

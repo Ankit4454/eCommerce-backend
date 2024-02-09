@@ -1,11 +1,18 @@
 const User = require('../models/user');
 const { compareSync } = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const textValidator = /[<>\$"'`;^]/;
+const emailValidator = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const mobileRegex = /^[0-9]{10}$/;
+const passwordValidator = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 module.exports.signup = function (req, res) {
-    const emailValidator = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const mobileRegex = /^[0-9]{10}$/;
-    const passwordValidator = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (textValidator.test(req.body.name)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Special characters are not allowed'
+        });
+    }
 
     if (!emailValidator.test(req.body.email)) {
         return res.status(400).json({
@@ -109,6 +116,27 @@ module.exports.signin = function (req, res) {
 }
 
 module.exports.update = function (req, res) {
+    if (textValidator.test(req.body.name)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Special characters are not allowed'
+        });
+    }
+
+    if (!emailValidator.test(req.body.email)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Invalid email format'
+        });
+    }
+
+    if (!mobileRegex.test(req.body.mobileNumber)) {
+        return res.status(400).json({
+            error: true,
+            message: 'Invalid phone number format'
+        });
+    }
+
     User.findByIdAndUpdate(req.body.id, { name: req.body.name, email: req.body.email, mobileNumber: req.body.mobileNumber }).then(function (data) {
         if (!data) {
             return res.status(404).json({

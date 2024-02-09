@@ -3,6 +3,7 @@ const path = require('path');
 const firebaseApp = require('../config/firebase');
 const { getStorage, ref, getDownloadURL, uploadBytesResumable } = require('firebase/storage');
 const { v4: uuidv4 } = require('uuid');
+const textValidator = /[<>\$"'`;^]/;
 
 const storage = getStorage();
 
@@ -34,6 +35,13 @@ module.exports.create = function (req, res) {
         }
 
         if (req.file) {
+            if (textValidator.test(req.body.name) || textValidator.test(req.body.description)) {
+                return res.status(400).json({
+                    error: true,
+                    message: 'Special characters are not allowed'
+                });
+            }
+
             const uniqueFilename = `product-${uuidv4()}${path.extname(req.file.originalname).toLowerCase()}`;
             const storageRef = ref(storage, `productImages/${uniqueFilename}`);
             const metadata = {
@@ -67,6 +75,13 @@ module.exports.update = function (req, res) {
             return res.status(400).json({
                 error: true,
                 message: 'File upload failed. ' + err.message
+            });
+        }
+
+        if (textValidator.test(req.body.name) || textValidator.test(req.body.description)) {
+            return res.status(400).json({
+                error: true,
+                message: 'Special characters are not allowed'
             });
         }
 
