@@ -8,7 +8,7 @@ const textValidator = /[<>\$"'`;^]/;
 const storage = getStorage();
 
 module.exports.products = function (req, res) {
-    Product.find({}).populate('user').populate({ path: 'ratings', options: { sort: { star: -1 } } }).then(function (products) {
+    Product.find({}).populate('user').populate({ path: 'ratings', options: { sort: { star: -1 } } }).sort({ createdAt: -1 }).then(function (products) {
         return res.status(200).json({
             success: true,
             data: {

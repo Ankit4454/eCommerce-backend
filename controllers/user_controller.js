@@ -96,7 +96,7 @@ module.exports.signin = function (req, res) {
             });
         }
 
-        const token = jwt.sign({ user }, process.env.SECRET_JWT_LC, { expiresIn: '1h' });
+        const token = jwt.sign({ user }, process.env.SECRET_JWT_LC, { expiresIn: '365d' });
         return res.status(200).json({
             success: true,
             data: {
@@ -160,7 +160,7 @@ module.exports.update = function (req, res) {
             createdAt: data.createdAt,
             updatedAt: data.updatedAt
         };
-        const token = jwt.sign({ user }, process.env.SECRET_JWT_LC, { expiresIn: '1h' });
+        const token = jwt.sign({ user }, process.env.SECRET_JWT_LC, { expiresIn: '365d' });
         return res.status(200).json({
             success: true,
             data: {
