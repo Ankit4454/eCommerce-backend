@@ -1,0 +1,25 @@
+<h1>Backend API Information</h1>
+<table>
+    <tr>
+        <th>HTTP Verbs</th>
+        <th>Token</th>
+        <th>Endpoints</th>
+        <th>Action</th>
+    </tr>
+    <% apis.forEach(api=> { %>
+        <tr>
+            <td>
+                <%= api.verb %>
+            </td>
+            <td>
+                <%= api.token %>
+            </td>
+            <td>
+                <%= api.endpoint %>
+            </td>
+            <td>
+                <%= api.action %>
+            </td>
+        </tr>
+        <% }); %>
+</table>
