@@ -6,7 +6,7 @@ Empower your e-commerce ambitions with a robust backend crafted in Node.js, Expr
 Clone the project and run following commands.
 
 ```bash
-  cd react-todo-list
+  cd eCommerce-backend
   npm install
   npm start
 ```
