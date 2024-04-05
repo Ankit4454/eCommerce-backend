@@ -54,7 +54,7 @@ Start the server at http://localhost:5000.
 
 ## Features
 
-- User Authentication: Robust signup and sign-in mechanisms facilitate secure access for doctors. JWT (JSON Web Token) authentication ensures data integrity and confidentiality.
+- User Authentication: Robust signup and sign-in mechanisms facilitate secure access for users. JWT (JSON Web Token) authentication ensures data integrity and confidentiality.
 
 - Multiple Address Support: Allow users to save and manage multiple shipping and billing addresses.
 
